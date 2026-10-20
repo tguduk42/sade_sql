@@ -22,7 +22,8 @@
     <div class="section-heading">KAYITLI SORGULAR <button id="new-query" class="icon-button" title="Yeni sorgu (Ctrl+N)" aria-label="Yeni sorgu">＋</button></div>
     <label class="search"><span>⌕</span><input id="search" placeholder="Sorgularda ara…" aria-label="Kayıtlı sorgularda ara"></label>
     <nav id="query-list" aria-label="Kayıtlı sorgular"></nav>
-    <div class="sidebar-bottom"><span class="local-dot"></span> Bilgisayarında saklanır <span class="version">v1.0.4</span></div>
+    <button id="check-update" class="text-button">Güncellemeleri kontrol et</button>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Bilgisayarında saklanır <span class="version">v1.0.5</span></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Çalışma alanı <span>/</span> <strong id="breadcrumb">Yeni sorgu</strong></div><button id="edit-connection" class="connection-badge"><span class="status-dot"></span><span id="active-connection">Bağlantı seçin</span><span>⌄</span></button></header>
@@ -44,6 +45,7 @@
     <footer class="app-footer"><span id="footer-connection">● Bağlantı seçilmedi</span><span>Yerel çalışma alanı <span class="footer-separator">·</span> Excel & CSV</span></footer>
   </main>
   <div id="toast" role="status" hidden></div>
+  <dialog id="update-dialog"><div class="dialog-heading"><h2>Uygulama güncellemesi</h2><button class="icon-button close-dialog" aria-label="Kapat">×</button></div><p id="update-message" role="status"></p><p>Güncelleme İndirilenler → Sade SQL klasörüne kaydedilir. Bağlantılarınız ve kayıtlı sorgularınız korunur. Sonraki açılışlarda yeni EXE'yi kullanın.</p><progress id="update-progress" max="100" value="0" hidden></progress><div class="dialog-footer"><button id="update-action" class="button primary" hidden></button></div></dialog>
   <dialog id="connection-dialog">
     <form id="connection-form">
       <div class="dialog-heading"><div><span class="eyebrow">POSTGRESQL</span><h2>Veritabanına bağlan</h2></div><button type="button" class="icon-button close-dialog" aria-label="Kapat">×</button></div>

@@ -300,4 +300,41 @@ window.addEventListener('beforeunload', event => {
   if (busy || sql.value !== savedSQL) { event.preventDefault(); event.returnValue = ''; }
 });
 api.onProgress(progress => $('#status-text').textContent = number(progress.rows) + ' satır aktarılıyor…');
+let updateState = { status: 'idle' };
+function renderUpdate(state) {
+  updateState = state;
+  const messages = {
+    idle: 'Güncellemeler GitHub üzerinden kontrol edilir.', checking: 'GitHub kontrol ediliyor…',
+    current: 'Güncelsiniz. Sürüm: ' + state.current,
+    available: 'Yeni sürüm hazır: ' + state.version,
+    downloading: 'Sürüm ' + state.version + ' indiriliyor: %' + (state.percent || 0),
+    ready: 'Sürüm ' + state.version + ' indirildi ve doğrulandı. Yeni sürümü açmak için sorgu/aktarım işleminizi tamamlayın.',
+    error: 'Güncelleme tamamlanamadı: ' + state.message
+  };
+  $('#update-message').textContent = messages[state.status] || '';
+  $('#update-progress').hidden = state.status !== 'downloading';
+  $('#update-progress').value = state.percent || 0;
+  const action = $('#update-action');
+  action.hidden = !['available', 'ready', 'error', 'current'].includes(state.status);
+  action.textContent = state.status === 'ready' ? 'Yeni sürümü aç' : state.status === 'available' ? 'İndir' : 'Tekrar kontrol et';
+  $('#check-update').textContent = ['available', 'ready'].includes(state.status) ? '↑ Yeni sürüm: ' + state.version : state.status === 'downloading' ? 'Güncelleme indiriliyor…' : 'Güncellemeleri kontrol et';
+}
+api.onUpdate(renderUpdate);
+$('#check-update').onclick = async () => {
+  if ($('dialog[open]')) return;
+  $('#update-dialog').showModal(); renderUpdate(updateState);
+  try { if (!['available', 'downloading', 'ready'].includes(updateState.status)) renderUpdate(await call('checkUpdate')); }
+  catch (error) { renderUpdate({ status: 'error', message: error.message }); }
+};
+$('#update-action').onclick = async () => {
+  const action = $('#update-action'); action.disabled = true;
+  try {
+    if (updateState.status === 'ready') {
+      if (busy || savingQuery) { toast('Önce devam eden işlemi tamamlayın.', true); return; }
+      await call('restartUpdate');
+    } else renderUpdate(await call(updateState.status === 'available' ? 'downloadUpdate' : 'checkUpdate'));
+  } catch (error) { toast(error.message, true); }
+  finally { action.disabled = false; }
+};
+call('updateState').then(renderUpdate).catch(error => toast(error.message, true));
 call('load').then(result => { workspace = result; if (workspace.connections.length) { connectionId = workspace.connections[0].id; useSavedPassword = workspace.connections[0].hasPassword; } renderSidebar(); updateEditor(); if (useSavedPassword) refreshTables(); else clearTables(connectionId ? 'Tabloları yüklemek için bağlantıyı açın veya ↻ düğmesine basın.' : ''); }).catch(error => toast(error.message, true));

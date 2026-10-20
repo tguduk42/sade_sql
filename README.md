@@ -4,11 +4,11 @@ Windows için ücretsiz, açık kaynak PostgreSQL istemcisi. Beekeeper Studio'da
 
 ## Aç ve kullan
 
-[**Windows EXE indir — v1.0.4**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.4/Sade-SQL-1.0.4-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
+[**Windows EXE indir — v1.0.5**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.5/Sade-SQL-1.0.5-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
 
 İndirilen EXE'ye çift tıklayın; kurulum gerekmez. Kaynak kod ZIP dosyası EXE içermez; hazır uygulamayı yukarıdaki bağlantıdan veya Releases bölümünden indirin.
 
-`dist/release-1.0.4/Sade-SQL-1.0.4-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.4/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
+`dist/release-1.0.5/Sade-SQL-1.0.5-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.5/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
 
 ### Bu bilgisayardaki WSL/Docker PostgreSQL
 
@@ -61,13 +61,21 @@ Metadata bağlantı sırasında ve ↻ ile yüklenir; öneri üretmek için hari
 - Hata veya iptalde tamamlanmamış dosya temizlenir. Var olan hedef dosya ancak aktarım başarıyla tamamlandığında değiştirilir. **İptal** PostgreSQL'e aynı kullanıcıyla sorgu iptal isteği yollar.
 - Çok büyük aktarımlarda yeterli disk alanı ve bağlantı süresi gerekir. Satır sınırı olmaması her boyutta verinin her bilgisayarda test edildiği anlamına gelmez.
 
-## Yerel kayıtlar
+## Güncellemeler
+
+Sol panelde **Güncellemeleri kontrol et** düğmesi bulunur. Paketlenmiş uygulama açılıştan 5 saniye sonra ve açık kaldığı sürece 6 saatte bir GitHub'daki en yeni kararlı sürümü kontrol eder. Yeni sürüm bulunduğunda düğmede sürüm numarası görünür; indirme kendiliğinden başlamaz.
+
+**İndir** dosyayı akışla `İndirilenler/Sade SQL` klasörüne kaydeder. GitHub'ın yayınladığı SHA-256 özeti ve dosya boyutu doğrulanmadan uygulama açılmaz. Kesik/bozuk indirmeler temizlenir; mevcut EXE değiştirilmez. **Yeni sürümü aç** mevcut pencereyi kapatıp indirilen sürümü başlatır. İşlem devam ederken açma engellenir; kaydedilmemiş sorgu varsa normal kapatma onayı gösterilir. Bağlantılar ve kayıtlı sorgular aynı kullanıcı veri klasöründe korunur. Sonraki açılışlarda yeni EXE'yi kullanın; eski EXE'ye bağlı masaüstü kısayolunu yeni dosyaya yönlendirin. Bu, taşınabilir uygulama güncellemesidir; Windows kurulumunu veya eski dosyanın üstüne yazmayı kullanmaz.
+
+İnternet/GitHub erişimi yoksa sorgu çalıştırma etkilenmez; düğmeden tekrar kontrol edebilirsiniz. GitHub hesabı veya API anahtarı gerekmez. Yalnızca `tguduk42/sade_sql` deposunun kararlı `vX.Y.Z` yayınları ve sürümle eşleşen Windows EXE'si kabul edilir; dosyanın SHA-256 bilgisi yayında bulunmalıdır. Bu dosya bütünlüğü kontrolüdür; Windows kod imzası yerine geçmez. Güncelleme özelliği 1.0.5 ile gelir: 1.0.4 ve önceki sürümlerde ilk geçiş için 1.0.5 EXE'sini elle indirin.
+
+## Kayıtların saklanması
 
 Bağlantılar ve sorgular `%APPDATA%/sade-sql/workspace.json` içinde saklanır (gerçek klasör Electron kullanıcı veri dizinidir). Yedeklemek için uygulamayı kapatıp bu dosyayı kopyalayın. Kaydedilmiş SQL içinde yazdığınız sabit değerler de bu dosyada bulunur.
 
 **Parolayı hatırla** seçilirse Windows `safeStorage` şifrelemesi kullanılır. Parola arayüze geri gönderilmez ve düz metin dosyaya yazılmaz. Seçilmezse parola yalnızca o uygulama oturumunda bellektedir. SSL doğrulama modu işletim sistemi/Node sertifika deposunu kullanır; özel CA dosyası seçme arayüzü bu sürümde yoktur.
 
-Uygulama dışarıda bir servise veri göndermez. PostgreSQL bağlantıları masaüstü ana işleminde kurulur; arayüzde Node erişimi yoktur. EXE dijital kod imzası içermez.
+Sorgular ve bağlantı bilgileri harici bir servise gönderilmez. Paketlenmiş uygulama açıldıktan sonra ve 6 saatte bir GitHub Releases üzerinden yeni sürüm kontrolü yapar; bu bağlantı GitHub ile normal HTTPS isteği bilgilerini paylaşır. PostgreSQL bağlantıları masaüstü ana işleminde kurulur; arayüzde Node erişimi yoktur. EXE dijital kod imzası içermez.
 
 ## Geliştirme
 
