@@ -1,0 +1,45 @@
+{
+  "name": "sade-sql",
+  "version": "1.0.4",
+  "description": "PostgreSQL için sade sorgu ve dışa aktarma istemcisi",
+  "author": "Sade SQL",
+  "license": "MIT",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win portable --x64",
+    "pack": "electron-builder --dir --win --x64"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "pg": "^8.23.1",
+    "pg-query-stream": "^4.10.3"
+  },
+  "devDependencies": {
+    "electron": "44.9.1",
+    "electron-builder": "26.15.3"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
+  },
+  "build": {
+    "appId": "local.sadesql.desktop",
+    "productName": "Sade SQL",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "LICENSE"
+    ],
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "artifactName": "Sade-SQL-${version}-Windows.${ext}"
+  }
+}

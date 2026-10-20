@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Sade SQL</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="catalog.css">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">s<span>q</span></span><div>Sade SQL<small>POSTGRESQL İSTEMCİSİ</small></div></div>
+    <div class="section-heading">BAĞLANTILAR <button id="add-connection" class="icon-button" title="Yeni bağlantı" aria-label="Yeni bağlantı">＋</button></div>
+    <div id="connection-list" class="connection-list"></div>
+    <div class="sidebar-divider catalog-divider"></div>
+    <div class="section-heading">TABLOLAR <span id="table-count"></span><button id="refresh-tables" class="icon-button" title="Tabloları yenile" aria-label="Tabloları yenile" disabled>↻</button></div>
+    <label class="search"><span>⌕</span><input id="table-search" placeholder="Tablolarda ara…" aria-label="Tablolarda ara"></label>
+    <nav id="table-list" aria-label="Veritabanı tabloları"><div class="sidebar-hint">Tablolar için bir bağlantı seç.</div></nav>
+    <div class="sidebar-divider"></div>
+    <div class="section-heading">KAYITLI SORGULAR <button id="new-query" class="icon-button" title="Yeni sorgu (Ctrl+N)" aria-label="Yeni sorgu">＋</button></div>
+    <label class="search"><span>⌕</span><input id="search" placeholder="Sorgularda ara…" aria-label="Kayıtlı sorgularda ara"></label>
+    <nav id="query-list" aria-label="Kayıtlı sorgular"></nav>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Bilgisayarında saklanır <span class="version">v1.0.4</span></div>
+  </aside>
+  <main>
+    <header class="topbar"><div class="breadcrumb">Çalışma alanı <span>/</span> <strong id="breadcrumb">Yeni sorgu</strong></div><button id="edit-connection" class="connection-badge"><span class="status-dot"></span><span id="active-connection">Bağlantı seçin</span><span>⌄</span></button></header>
+    <section class="workspace">
+      <div class="page-heading"><div><div class="eyebrow">SQL ÇALIŞMA ALANI</div><h1 id="query-title">Yeni sorgu</h1><p>Sorgunu yaz, kaydet ve sonuçları tek tıkla dosyaya aktar.</p></div><button id="open-sql" class="button subtle">↗ SQL dosyası aç</button></div>
+      <div class="editor-panel">
+        <div class="editor-toolbar"><div class="editor-label"><span class="sql-chip">SQL</span><span id="editor-file">yeni-sorgu.sql</span><span id="dirty" title="Kaydedilmemiş değişiklik">●</span></div><div class="toolbar-actions"><button id="rename-query" class="button subtle" title="Sorgu adını değiştir veya yeni kopya oluştur" aria-label="Sorgu adını değiştir veya kopyala">⋯</button><button id="save-query" class="button subtle">Kaydet <kbd>Ctrl S</kbd></button><button id="run-query" class="button primary">▶ Çalıştır <kbd>Ctrl Enter</kbd></button><button id="cancel" class="button danger" hidden>İptal</button></div></div>
+        <div class="code-area"><div id="line-numbers" aria-hidden="true">1</div><textarea id="sql" spellcheck="false" aria-label="SQL sorgusu" placeholder="SELECT * FROM tablo_adi;"></textarea></div>
+        <section id="parameters" hidden><div class="parameter-heading"><strong>Parametreler</strong><small>:isim veya $1 · Değerler yalnızca bu oturumda tutulur</small></div><div id="parameter-fields"></div><div id="parameter-message" role="alert"></div></section>
+        <div class="editor-footer"><span><span class="green-dot"></span> PostgreSQL <span class="editor-help">Ctrl+Space: tamamla</span></span><span>Tek SQL komutu · Önizleme en fazla 1.000 satır</span></div>
+      </div>
+      <section class="result-panel">
+        <div class="result-toolbar"><div class="result-title"><span class="table-symbol">▦</span><strong>Sonuçlar</strong><span id="row-count" class="count">0 satır</span><span id="duration"></span></div><div class="toolbar-actions"><button id="export-csv" class="button export" disabled>↓ CSV indir</button><button id="export-xlsx" class="button export excel" disabled>↓ Excel indir</button></div></div>
+        <div id="export-note" class="export-note">İndirme, sorguyu yeniden çalıştırıp tüm sonuçları aktarır. Yalnızca okuma sorguları indirilebilir.</div>
+        <div id="results" class="results"><div class="empty-state"><div class="empty-icon">▦</div><h2>Verilerine bir sorgu kadar yakınsın.</h2><p>Bir bağlantı seç ve ilk sorgunu çalıştır.<br>Kayıtlı sorgularını soldaki listeden açabilirsin.</p><span class="shortcut"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> ile çalıştır</span></div></div>
+        <div id="result-status" class="result-status"><span id="status-text">Hazır</span><button id="show-file" class="text-button" hidden>Dosyayı klasörde göster ↗</button></div>
+      </section>
+    </section>
+    <footer class="app-footer"><span id="footer-connection">● Bağlantı seçilmedi</span><span>Yerel çalışma alanı <span class="footer-separator">·</span> Excel & CSV</span></footer>
+  </main>
+  <div id="toast" role="status" hidden></div>
+  <dialog id="connection-dialog">
+    <form id="connection-form">
+      <div class="dialog-heading"><div><span class="eyebrow">POSTGRESQL</span><h2>Veritabanına bağlan</h2></div><button type="button" class="icon-button close-dialog" aria-label="Kapat">×</button></div>
+      <input type="hidden" name="id">
+      <label>Bağlantı adı<input name="name" placeholder="Örn. Raporlama veritabanı" required maxlength="100"></label>
+      <div class="form-row host-row"><label>Sunucu<input name="host" placeholder="localhost" value="localhost" required></label><label>Port<input name="port" type="number" value="5432" min="1" max="65535" required></label></div>
+      <label>Veritabanı<input name="database" placeholder="Veritabanı adı" required></label>
+      <div class="form-row"><label>Kullanıcı adı<input name="user" value="postgres" required></label><label>Parola<input name="password" type="password" autocomplete="new-password" placeholder="Parolanız"></label></div>
+      <label>SSL bağlantısı<select name="ssl"><option value="disable">Kapalı (yerel bağlantı)</option><option value="verify">Açık — sunucu sertifikasını doğrula</option><option value="require">Açık — sertifika doğrulaması olmadan</option></select></label>
+      <label class="checkbox-label"><input name="rememberPassword" type="checkbox"> Parolayı Windows şifrelemesiyle hatırla</label>
+      <div id="connection-message" class="form-message" role="status"></div>
+      <div class="dialog-footer"><button type="button" id="delete-connection" class="button danger" hidden>Sil</button><button type="button" id="test-connection" class="button subtle">Bağlantıyı test et</button><button type="submit" class="button primary">Kaydet ve seç</button></div>
+    </form>
+  </dialog>
+  <dialog id="save-dialog"><form id="save-form"><div class="dialog-heading"><h2>Sorguyu kaydet</h2><button type="button" class="icon-button close-dialog" aria-label="Kapat">×</button></div><label>Sorgu adı<input id="query-name" placeholder="Örn. Günlük satış raporu" required maxlength="160"></label><div class="dialog-footer"><button type="button" id="save-copy" class="button subtle">Yeni kopya kaydet</button><button type="submit" class="button primary">Kaydet</button></div></form></dialog>
+  <dialog id="confirm-dialog"><div class="dialog-heading"><h2 id="confirm-title"></h2></div><p id="confirm-text"></p><div class="dialog-footer"><button id="confirm-no" class="button subtle">Vazgeç</button><button id="confirm-yes" class="button primary">Devam et</button></div></dialog>
+  <div id="completions" role="listbox" aria-label="SQL tamamlama önerileri" hidden></div>
+  <script src="sql-tools.js"></script>
+  <script src="sql-editor.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
