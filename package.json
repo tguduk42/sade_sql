@@ -1,6 +1,6 @@
 {
   "name": "sade-sql",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "PostgreSQL için sade sorgu ve dışa aktarma istemcisi",
   "author": "Sade SQL",
   "license": "MIT",

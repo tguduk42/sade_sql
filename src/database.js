@@ -9,6 +9,7 @@ const { once } = require('node:events');
 const { bind } = require('./ui/sql-tools');
 const { createCSV } = require('./csv');
 const { isMoneyColumn, excelNumber } = require('./ui/number-format');
+const DateDisplay = require('./ui/date-format');
 
 const PREVIEW_LIMIT = 1000;
 // CSV benefits strongly from fewer database round trips. XLSX is dominated by
@@ -66,15 +67,18 @@ class Database {
   async withClient(connection, task) {
     if (this.active) throw new Error('Devam eden işlemin bitmesini bekleyin.');
     const config = configuration(connection);
-    // A DATE has no timezone; retain its calendar day instead of converting it
-    // through a local Date object and shifting it when displayed as UTC.
-    const client = new Client({ ...config, types: { getTypeParser: (oid, format) => oid === 1082 && format !== 'binary' ? value => value : types.getTypeParser(oid, format) } });
+    // Keep scalar date/timestamp text: Date truncates the last three fractional
+    // digits and can shift wall-clock timestamps through the machine timezone.
+    const client = new Client({ ...config, types: { getTypeParser: (oid, format) => [1082,1114,1184].includes(oid) && format !== 'binary' ? value => value : types.getTypeParser(oid, format) } });
     const operation = { client, config, stream: null, cancelled: false };
     this.active = operation;
     // Connection-level errors must never terminate the desktop process.
     client.on('error', error => { operation.connectionError = error; });
     try {
       await client.connect();
+      if (operation.cancelled) throw new Error('İşlem iptal edildi.');
+      // ISO output only; retain the server's DMY/MDY/YMD input ordering.
+      await client.query('SET DateStyle TO ISO');
       if (operation.cancelled) throw new Error('İşlem iptal edildi.');
       return await task(client, operation);
     } catch (error) {
@@ -175,6 +179,7 @@ class Database {
             // Preserve bigint/numeric strings without Excel's 15-digit rounding.
             const cells = row.map((value, index) => {
               if (value == null) return null;
+              if (DateDisplay.isTimestamp(metadata[index].dataTypeID)) return DateDisplay.format(value, metadata[index].dataTypeID);
               if (numberFormat === 'tr-money' && isMoneyColumn(metadata[index].dataTypeID, fields[index])) {
                 const numeric = excelNumber(value);
                 if (numeric !== null) return numeric;

@@ -150,6 +150,51 @@ test('A long-running query can be cancelled and connection is reusable', { timeo
   await new Promise(resolve => setTimeout(resolve, 300)); await db.cancel(); await rejected;
   assert.equal((await db.preview(local.connection, 'SELECT 42 AS answer')).rows[0][0], '42');
 });
+
+test('Timestamp preview and exports retain microseconds, use session timezone, and preserve date input ordering', async () => {
+  const db = new Database();
+  await db.withClient(local.connection, async client => {
+    await client.query("ALTER DATABASE postgres SET timezone TO 'Asia/Kathmandu'");
+    await client.query("ALTER DATABASE postgres SET datestyle TO 'German, DMY'");
+  });
+  try {
+    const sql = `SELECT '2022-12-21 12:26:06.671862'::timestamp AS tarih,
+      '2022-12-21 12:26:06.671862+03'::timestamptz AS zoned,
+      '01/02/2022'::date AS gun, '2022-12-21 12:26:06.1'::timestamp AS short,
+      '2022-12-21 12:26:06.000001'::timestamp AS micro, NULL::timestamp AS missing,
+      '2022-12-21T12:00:00Z'::text AS literal`;
+    const preview = await db.preview(local.connection,sql);
+    assert.equal(preview.rows[0][0],'2022-12-21 12:26:06.671862');
+    assert.equal(preview.rows[0][1],'2022-12-21 15:11:06.671862+05:45');
+    assert.equal(preview.rows[0][2],'2022-02-01');
+    assert.equal(preview.rows[0][4],'2022-12-21 12:26:06.000001');
+    for (const csvMode of ['excel-tr','excel-tr-legacy','standard']) {
+      const file = path.join(local.directory,'timestamp-'+csvMode+'.csv');
+      await db.export(local.connection,sql,'csv',file,undefined,{}, {csvMode});
+      const bytes = await fs.readFile(file);
+      const contents = csvMode === 'excel-tr-legacy' ? new TextDecoder('windows-1254').decode(bytes) : bytes.toString('utf8');
+      assert.ok(contents.includes('2022-12-21 12:26:06.671862'));
+      assert.ok(contents.includes(csvMode === 'standard' ? '2022-12-21 15:11:06.671862+05:45' : '2022-12-21 15:11:06.671862;'));
+      assert.ok(contents.includes('2022-02-01'));
+      assert.ok(contents.includes(csvMode === 'standard' ? '2022-12-21 12:26:06.1,' : '2022-12-21 12:26:06.100000;'));
+      assert.ok(contents.includes('2022-12-21 12:26:06.000001'));
+      assert.ok(contents.includes('2022-12-21T12:00:00Z'));
+    }
+    const file=path.join(local.directory,'timestamp.xlsx');
+    await db.export(local.connection,sql,'xlsx',file);
+    const book=new ExcelJS.Workbook();await book.xlsx.readFile(file);const sheet=book.worksheets[0];
+    assert.equal(sheet.getCell('A2').value,'2022-12-21 12:26:06.671862');
+    assert.equal(sheet.getCell('B2').value,'2022-12-21 15:11:06.671862');
+    assert.equal(sheet.getCell('D2').value,'2022-12-21 12:26:06.100000');
+    assert.equal(sheet.getCell('E2').value,'2022-12-21 12:26:06.000001');
+    assert.equal(sheet.getCell('F2').value,null);
+  } finally {
+    await db.withClient(local.connection,async client => {
+      await client.query('ALTER DATABASE postgres RESET timezone');
+      await client.query('ALTER DATABASE postgres RESET datestyle');
+    });
+  }
+});
 test('Excel rejects overlong cells without publishing a broken file; CSV preserves the full text', async () => {
   const db = new Database(), file = path.join(local.directory, 'long.xlsx');
   await assert.rejects(db.export(local.connection, "SELECT repeat('a',32768) AS long_text", 'xlsx', file), /32.767/);

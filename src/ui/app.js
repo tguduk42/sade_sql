@@ -191,7 +191,7 @@ function showResults(result) {
   const body = document.createElement('tbody');
   result.rows.forEach((values, index) => {
     const row = document.createElement('tr'), count = document.createElement('td'); count.textContent = index + 1; count.className = 'row-number'; row.append(count);
-    values.forEach((value, column) => { const cell = document.createElement('td'); cell.textContent = value === null ? 'NULL' : NumberDisplay.display(value, result.fieldTypes?.[column], result.fields[column], $('#number-format').value); if (value === null) cell.className = 'null'; cell.title = value ?? 'NULL'; row.append(cell); });
+    values.forEach((value, column) => { const cell = document.createElement('td'); const formatted = DateDisplay.format(value, result.fieldTypes?.[column]); cell.textContent = value === null ? 'NULL' : NumberDisplay.display(formatted, result.fieldTypes?.[column], result.fields[column], $('#number-format').value); if (value === null) cell.className = 'null'; cell.title = value ?? 'NULL'; row.append(cell); });
     body.append(row);
   }); table.append(head, body); $('#results').replaceChildren(table);
   $('#status-text').textContent = result.truncated ? 'İlk 1.000 satır gösteriliyor. İndirme düğmeleri tüm sonuçları aktarır.' : result.rows.length ? 'Sorgu tamamlandı.' : 'Komut tamamlandı. Sonuç satırı yok.';

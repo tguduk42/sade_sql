@@ -4,11 +4,11 @@ Windows için ücretsiz, açık kaynak PostgreSQL istemcisi. Beekeeper Studio'da
 
 ## Aç ve kullan
 
-[**Windows EXE indir — v1.0.7**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.7/Sade-SQL-1.0.7-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
+[**Windows EXE indir — v1.0.8**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.8/Sade-SQL-1.0.8-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
 
 İndirilen EXE'ye çift tıklayın; kurulum gerekmez. Kaynak kod ZIP dosyası EXE içermez; hazır uygulamayı yukarıdaki bağlantıdan veya Releases bölümünden indirin.
 
-`dist/release-1.0.7/Sade-SQL-1.0.7-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.7/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
+`dist/release-1.0.8/Sade-SQL-1.0.8-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.8/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
 
 ### Bu bilgisayardaki WSL/Docker PostgreSQL
 
@@ -55,6 +55,14 @@ Metadata bağlantı sırasında ve ↻ ile yüklenir; öneri üretmek için hari
 Sonuçların üstündeki **Sayı görünümü → Tutar (36.000,00)** varsayılandır. `36000` → `36.000,00`, `850000.0000000` → `850.000,00` görünür. `numeric`/ondalıklı sütunlara ve adı tutar/amount/fiyat/bakiye/toplam gibi olan sayısal sütunlara uygulanır; ID, kimlik, kod, UUID ve IBAN isimli sütunlar hariçtir. Tam sayı ID ve metin kodları değiştirilmez. İki basamağa yuvarlama yapılır; yarımlar sıfırdan uzağa yuvarlanır. Veritabanı ve sorgu metni değiştirilmez. Ekranda hücrenin üzerine gelince ham değer görünür; **Ham değer** seçeneği sorguyu yeniden çalıştırmadan eski görünümü açar.
 
 Türkçe CSV seçenekleri aynı görünümü dosyaya yazar. **Standart CSV**, makineye aktarım için ham noktalı değerleri korur. Excel'de 15 anlamlı rakama sığan tutarlar sayı olarak yazılır ve `#,##0.00` biçimi uygulanır; Türkçe Excel bölge ayarında `36.000,00` görünür, toplam alınabilir. Excel'in kendi bölge ayarı farklıysa ayırıcıların görünümü o ayara uyar. Excel'e sığmayacak hassas değerler, yuvarlanıp bozulmaması için eski davranıştaki gibi tam metin olarak korunur. Bu istisnada XLSX hücresi tutar görünümüne çevrilmez; ham değeri saklar.
+
+### Tarih-saat görünümü
+
+`timestamp` ve `timestamptz` sütunları sonuç ekranında, Türkçe CSV seçeneklerinde ve XLSX'te **`YYYY-MM-DD HH:mm:ss.ffffff`** biçimindedir; örnek: `2022-12-21 12:26:06.671862`. Kesir yoksa `.000000`, `.1` ise `.100000` yazılır. JavaScript Date dönüşümü yapılmaz; PostgreSQL'in altı basamaklı mikrosaniye bilgisi korunur. Yalnızca tarih içeren `date` sütunları `YYYY-MM-DD` olarak kalır; olmayan bir saat eklenmez. Metin/JSON içindeki tarihler değiştirilmez.
+
+Saat dilimli alanlarda PostgreSQL oturumunun saat dilimindeki saat kullanılır; bilgisayarın saat dilimine veya zorla UTC'ye çevrilmez. İstenen görünümde saat dilimi son eki yazılmaz; ekranda ham tooltip ve Standart CSV bu bilgiyi korur. Standart CSV, PostgreSQL'in ham ISO metnini ve mevcut kesir basamaklarını saklar. CSV'yi Excel'de doğrudan açmak, Excel'in otomatik tarih yorumlamasına tabidir; altı basamağın kesin korunması için XLSX kullanın. XLSX tarih-saat hücreleri mikrosaniye kaybını önlemek için **metin** olarak yazılır; Excel seri tarih değeri değildir.
+
+Uygulama bağlantısında yalnızca tarih çıktı stili ISO yapılır. Sunucunun DMY/MDY/YMD tarih giriş sırası ve oturum TimeZone ayarı korunur. `infinity`, `-infinity` ve BC gibi olağan dışı değerler dönüştürülmeden bırakılır. Bu gösterim skaler tarih-saat sütunları içindir; tarih dizileri/JSON için yeni dönüştürme uygulanmaz.
 
 ### Aktarım kuralları
 

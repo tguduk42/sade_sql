@@ -1,5 +1,6 @@
 const NUMERIC_TYPES = new Set([20, 21, 23, 700, 701, 1700]);
 const { display } = require('./ui/number-format');
+const DateDisplay = require('./ui/date-format');
 const MODES = {
   standard: { delimiter: ',', decimal: '.', encoding: 'utf8', bom: '\uFEFF' },
   'excel-tr': { delimiter: ';', decimal: ',', encoding: 'utf8', bom: '\uFEFF' },
@@ -29,6 +30,7 @@ function createCSV(mode, valueText, numberFormat = 'raw') {
   if (!options) throw new Error('Geçersiz CSV biçimi.');
   const cell = (value, field = {}) => {
     let text = valueText(value);
+    if (mode !== 'standard') text = DateDisplay.format(text, field.dataTypeID);
     // Localize database numbers only. Text IDs, JSON and dates must retain dots.
     if (options.decimal === ',') {
       const formatted = display(text, field.dataTypeID, field.name, numberFormat);

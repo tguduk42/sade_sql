@@ -17,7 +17,7 @@ async function main() {
         load: () => ok({connections:[{id:'fixture',name:'Test',hasPassword:true}],queries:[]}),
         tables: () => ok([]), onProgress: () => () => {}, onUpdate: () => () => {},
         updateState: () => ok({status:'current',current:'test'}),
-        run: () => { window.testRuns++; return ok({fields:['Tutar','Bakiye','id','Kod'],fieldTypes:[1700,1700,23,25],rows:[['36000','850000.0000000','7','00123.45']],elapsed:1,truncated:false}); },
+        run: () => { window.testRuns++; return ok({fields:['Tutar','Bakiye','id','Kod','Tarih','Saat dilimli','Gün'],fieldTypes:[1700,1700,23,25,1114,1184,1082],rows:[['36000','850000.0000000','7','00123.45','2022-12-21 12:26:06.671862','2022-12-21 12:26:06.1+03','2022-12-21']],elapsed:1,truncated:false}); },
         export: input => { window.testExport = input; return ok({rows:1,path:'fixture.csv'}); }
       };
     });
@@ -25,8 +25,9 @@ async function main() {
     await page.locator('#sql').fill('SELECT 36000::numeric AS tutar');
     await page.locator('#run-query').click();
     await page.waitForSelector('tbody tr');
-    assert.deepEqual(await page.locator('tbody td').allTextContents(), ['1','36.000,00','850.000,00','7','00123.45']);
+    assert.deepEqual(await page.locator('tbody td').allTextContents(), ['1','36.000,00','850.000,00','7','00123.45','2022-12-21 12:26:06.671862','2022-12-21 12:26:06.100000','2022-12-21']);
     assert.equal(await page.locator('tbody td').nth(2).getAttribute('title'), '850000.0000000');
+    assert.equal(await page.locator('tbody td').nth(6).getAttribute('title'), '2022-12-21 12:26:06.1+03');
     await page.locator('#number-format').selectOption('raw');
     assert.equal(await page.locator('tbody td').nth(2).textContent(), '850000.0000000');
     await page.locator('#number-format').selectOption('tr-money');
@@ -38,7 +39,7 @@ async function main() {
     await fs.mkdir(path.resolve(__dirname,'../test-output'),{recursive:true});
     await page.screenshot({path:path.resolve(__dirname,'../test-output/money-display.png')});
     assert.deepEqual(errors,[]);
-    console.log('PASS: headless renderer shows 36.000,00 / 850.000,00, preserves IDs/raw tooltips, toggles without rerunning SQL, and forwards export format. Bridge uses synthetic fixtures.');
+    console.log('PASS: headless renderer shows money and six-digit timestamps, preserves dates/IDs/raw timezone tooltips, toggles without rerunning SQL, and forwards export format. Bridge uses synthetic fixtures.');
   } finally { await browser.close(); }
 }
 main().catch(error => {console.error(error);process.exitCode=1});
