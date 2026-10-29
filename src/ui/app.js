@@ -43,6 +43,7 @@ function updateButtons() {
   const ready = Boolean(connectionId && sql.value.trim() && !busy);
   $('#run-query').disabled = !ready;
   $('#export-csv').disabled = !ready; $('#export-xlsx').disabled = !ready;
+  $('#csv-mode').disabled = busy;
   $('#cancel').hidden = !busy;
   for (const selector of ['#save-query', '#rename-query', '#new-query', '#open-sql', '#add-connection', '#edit-connection']) $(selector).disabled = busy || savingQuery;
   $('#refresh-tables').disabled = busy || tablesLoading || !connectionId;
@@ -208,7 +209,7 @@ async function exportResults(format) {
   // Exports are intentionally read-only: rerunning a modifying statement must not duplicate writes.
   try {
     const connection = currentConnection(), parameters = editor.values(); setBusy(true, 'Dosya konumu seçiliyor…');
-    const result = await call('export', { connection, sql: sql.value, parameters, format, name: workspace.queries.find(query => query.id === queryId)?.name || 'Sorgu sonucu' });
+    const result = await call('export', { connection, sql: sql.value, parameters, format, csvMode: $('#csv-mode').value, name: workspace.queries.find(query => query.id === queryId)?.name || 'Sorgu sonucu' });
     if (result.cancelled) { $('#status-text').textContent = 'İndirme iptal edildi.'; return; }
     exportedPath = result.path; $('#show-file').hidden = false;
     $('#status-text').textContent = number(result.rows) + ' satır dosyaya kaydedildi.';

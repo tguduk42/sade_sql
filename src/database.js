@@ -7,6 +7,7 @@ const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { once } = require('node:events');
 const { bind } = require('./ui/sql-tools');
+const { createCSV } = require('./csv');
 
 const PREVIEW_LIMIT = 1000;
 // CSV benefits strongly from fewer database round trips. XLSX is dominated by
@@ -126,10 +127,11 @@ class Database {
       return { fields, rows, truncated, elapsed: Date.now() - started, limit: PREVIEW_LIMIT };
     });
   }
-  async export(connection, sql, format, destination, progress = () => {}, parameters = {}) {
+  async export(connection, sql, format, destination, progress = () => {}, parameters = {}, options = {}) {
     checkSQL(sql);
     const query = bind(sql, parameters);
     if (!['csv', 'xlsx'].includes(format)) throw new Error('Geçersiz dosya türü.');
+    const csv = format === 'csv' ? createCSV(options.csvMode || 'standard', valueText) : null;
     const temporary = path.join(path.dirname(destination), '.' + randomUUID() + '.partial');
     let output;
     try {
@@ -141,14 +143,14 @@ class Database {
         output = fs.createWriteStream(temporary, { flags: 'wx' });
         let outputError;
         output.on('error', error => { outputError = error; stream.destroy(error); });
-        let workbook, sheet, fields, count = 0, sheetNumber = 0, sheetRows = 0;
+        let workbook, sheet, fields, metadata, count = 0, sheetNumber = 0, sheetRows = 0;
         if (format === 'xlsx') workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: output, useStyles: true, useSharedStrings: false });
         const write = async text => {
           if (outputError) throw outputError;
           if (!output.write(text)) await once(output, 'drain');
         };
         const header = async () => {
-          if (format === 'csv') await write('\uFEFF' + fields.map(csvCell).join(',') + '\r\n');
+          if (format === 'csv') await write(csv.header(metadata));
           else {
             sheet = workbook.addWorksheet('Sonuçlar ' + (++sheetNumber), { views: [{ state: 'frozen', ySplit: 1 }] });
             sheet.columns = fields.map(name => ({ width: Math.min(48, Math.max(18, name.length + 3)) }));
@@ -161,8 +163,8 @@ class Database {
         };
         for await (const row of stream) {
           if (operation.cancelled) throw new Error('İşlem iptal edildi.');
-          if (!fields) { fields = stream.cursor._result.fields.map(field => field.name); await header(); }
-          if (format === 'csv') await write(row.map(csvCell).join(',') + '\r\n');
+          if (!fields) { metadata = stream.cursor._result.fields; fields = metadata.map(field => field.name); await header(); }
+          if (format === 'csv') await write(csv.row(row, metadata));
           else {
             if (sheetRows >= 1_048_575) { sheet.commit(); await header(); }
             // Preserve bigint/numeric strings without Excel's 15-digit rounding.
@@ -183,7 +185,7 @@ class Database {
           count++;
           if (count % 1000 === 0) progress({ rows: count });
         }
-        if (!fields) { fields = stream.cursor._result.fields.map(field => field.name); await header(); }
+        if (!fields) { metadata = stream.cursor._result.fields; fields = metadata.map(field => field.name); await header(); }
         if (operation.cancelled) throw new Error('İşlem iptal edildi.');
         if (workbook) { sheet.commit(); await workbook.commit(); }
         else { const finished = once(output, 'finish'); output.end(); await finished; }

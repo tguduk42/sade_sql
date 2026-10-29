@@ -4,11 +4,11 @@ Windows için ücretsiz, açık kaynak PostgreSQL istemcisi. Beekeeper Studio'da
 
 ## Aç ve kullan
 
-[**Windows EXE indir — v1.0.5**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.5/Sade-SQL-1.0.5-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
+[**Windows EXE indir — v1.0.6**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.6/Sade-SQL-1.0.6-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
 
 İndirilen EXE'ye çift tıklayın; kurulum gerekmez. Kaynak kod ZIP dosyası EXE içermez; hazır uygulamayı yukarıdaki bağlantıdan veya Releases bölümünden indirin.
 
-`dist/release-1.0.5/Sade-SQL-1.0.5-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.5/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
+`dist/release-1.0.6/Sade-SQL-1.0.6-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.6/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
 
 ### Bu bilgisayardaki WSL/Docker PostgreSQL
 
@@ -55,11 +55,13 @@ Metadata bağlantı sırasında ve ↻ ile yüklenir; öneri üretmek için hari
 - Aktarım **editördeki sorguyu yeniden çalıştırır**. Önizlemeden sonra veritabanındaki veriler değişmişse dosya yeni sonucu içerir. Aynı sıralama için sorguya `ORDER BY` ekleyin.
 - Aktarımlar PostgreSQL **READ ONLY** işlemi içinde çalışır. `INSERT`, `UPDATE`, `DELETE` gibi veri değiştiren komutlar indirilemez. Normal Çalıştır bu komutları çalıştırabilir; veritabanı kullanıcı yetkileri uygulanır.
 - Her çalıştırma ve aktarım ayrı bir bağlantı kullanır. Tek seferde **tek SQL komutu** desteklenir; sekmeler arasında açık transaction/session tutulmaz. Parametreler yukarıda açıklanan giriş alanlarından alınır.
-- CSV UTF-8 BOM, virgül ayırıcı, çift tırnak kaçışı ve CRLF satır sonu kullanır. Excel'de tek sütun görünürse **Veri → Metinden/CSV** ile virgül ve UTF-8 seçin.
+- CSV biçimi seçiminden **Excel (Türkçe / UTF-8)** varsayılan olarak seçilir: UTF-8 BOM, noktalı virgül sütun ayırıcı ve sayısal PostgreSQL sütunlarında ondalık virgül kullanılır. Örneğin `1234.56::numeric` CSV'ye `1234,56` yazılır. Metin kodları, tarihler ve JSON içindeki noktalar değiştirilmez. **Eski Excel (Windows-1254)** aynı Türkçe ayırıcılarla eski kodlamayı kullanır; bu kodlamaya sığmayan emoji/karakter varsa sessizce bozulmak yerine işlem durur ve UTF-8/Excel önerilir. **Standart (UTF-8)** eski davranışı korur: UTF-8 BOM, virgül sütun ve nokta ondalık ayırıcı. Bütün biçimler çift tırnak kaçışı ve CRLF kullanır; `sep=` gibi ek veri satırı yazılmaz.
 - PostgreSQL `numeric` ve `bigint` değerleri hassasiyet kaybolmaması için Excel'e metin olarak yazılır. NULL boş hücre olur; JSON ve diziler metindir. DATE değerleri saat dilimine çevrilmeden `YYYY-MM-DD` olarak korunur; zaman damgaları ISO biçimindedir.
 - Excel'in sayfa sınırını aşan sonuçlar yeni sayfalara bölünür (her sayfada başlık + en fazla 1.048.575 veri satırı). Hücre metni 32.767 karakteri aşıyorsa aktarım açıklayıcı hatayla durur; bu veriler için CSV kullanın.
 - Hata veya iptalde tamamlanmamış dosya temizlenir. Var olan hedef dosya ancak aktarım başarıyla tamamlandığında değiştirilir. **İptal** PostgreSQL'e aynı kullanıcıyla sorgu iptal isteği yollar.
 - Çok büyük aktarımlarda yeterli disk alanı ve bağlantı süresi gerekir. Satır sınırı olmaması her boyutta verinin her bilgisayarda test edildiği anlamına gelmez.
+
+CSV kendi içinde sütun türü taşımaz. Excel dosyayı açarken Windows bölge ayarlarına göre yorumlar. Türkiye dışındaki ayarlarda **Veri → Metinden/CSV** ile kodlama, ayırıcı ve Türkçe sayı yerel ayarını seçin. Özellikle 15 anlamlı rakamı geçen kimlik/tutarlar, baştaki sıfırlar ve çok hassas değerler için **Excel indir (XLSX)** kullanın; CSV'nin otomatik tür tahminine güvenmeyin.
 
 ## Güncellemeler
 

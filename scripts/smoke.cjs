@@ -118,6 +118,27 @@ async function smoke() {
     await page.click('#run-query');
     await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 1000);
     assert.equal(errors.length, 0, errors.join('\n'));
+    const csvPreviousSQL = await page.locator('#sql').inputValue();
+    await page.locator('#sql').fill(`SELECT 'Çağrı İıŞşĞğÜüÖöÇç' AS "Açıklama", 1234.56::numeric AS tutar, -12.34::numeric AS eksi, 0.18::numeric AS oran, '00123.45'::text AS kod`);
+    assert.equal(await page.locator('#csv-mode').inputValue(), 'excel-tr');
+    for (const csvMode of ['excel-tr', 'excel-tr-legacy', 'standard']) {
+      await page.locator('#csv-mode').selectOption(csvMode);
+      const destination = path.join(output, 'csv-locale', csvMode + '.csv');
+      await fs.mkdir(path.dirname(destination), { recursive: true });
+      await application.evaluate(({ dialog }, filePath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath }); }, destination);
+      // Clear the previous export's status to wait for this export specifically.
+      await page.evaluate(() => document.querySelector('#status-text').textContent = '');
+      await page.click('#export-csv');
+      await page.waitForFunction(() => document.querySelector('#status-text').textContent.includes('1 satır dosyaya kaydedildi'));
+      const data = await fs.readFile(destination);
+      const decoded = csvMode === 'excel-tr-legacy' ? new TextDecoder('windows-1254').decode(data) : data.toString('utf8');
+      assert.ok(decoded.includes('Çağrı İıŞşĞğÜüÖöÇç'));
+      assert.ok(decoded.includes(csvMode === 'standard' ? ',1234.56,-12.34,0.18,' : ';1234,56;-12,34;0,18;'));
+      assert.ok(decoded.includes('00123.45'));
+    }
+    await page.locator('#sql').fill(csvPreviousSQL);
+    await page.locator('#csv-mode').selectOption('excel-tr');
+    console.log('PASS: all three CSV choices use real IPC/database export; Turkish text, decimal amounts and text IDs preserved.');
     // SQL completion is local: keyword, real metadata columns/aliases and string/comment exclusion.
     await page.locator('#sql').fill('SEL');
     await page.locator('#sql').press('Control+Space');

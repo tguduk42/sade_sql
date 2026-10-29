@@ -2,3 +2,5 @@
 .sidebar .connection-list{flex-shrink:0;min-height:53px}
 @media(max-height:760px){.sidebar{padding-top:14px}.sidebar .brand{margin-bottom:12px}.sidebar .sidebar-divider{margin:12px 8px}.sidebar .section-heading{margin-bottom:7px}.sidebar .search{margin-bottom:9px}.sidebar .connection-list{max-height:96px}.sidebar-bottom{padding-top:12px;padding-bottom:12px;margin-top:10px}#table-list{min-height:75px;max-height:180px}}
 #check-update{margin-top:8px;flex-shrink:0;font-size:11px}#update-dialog p{line-height:1.7;color:#aab5c2}#update-progress{width:100%;accent-color:var(--accent)}
+
+#csv-mode{max-width:210px;background:#171d24;color:#c5cfdb;border:1px solid #424d5b;border-radius:5px;padding:7px;font-size:11px}@media(max-width:1130px){#csv-mode{max-width:145px}}

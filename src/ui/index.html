@@ -23,7 +23,7 @@
     <label class="search"><span>⌕</span><input id="search" placeholder="Sorgularda ara…" aria-label="Kayıtlı sorgularda ara"></label>
     <nav id="query-list" aria-label="Kayıtlı sorgular"></nav>
     <button id="check-update" class="text-button">Güncellemeleri kontrol et</button>
-    <div class="sidebar-bottom"><span class="local-dot"></span> Bilgisayarında saklanır <span class="version">v1.0.5</span></div>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Bilgisayarında saklanır <span class="version">v1.0.6</span></div>
   </aside>
   <main>
     <header class="topbar"><div class="breadcrumb">Çalışma alanı <span>/</span> <strong id="breadcrumb">Yeni sorgu</strong></div><button id="edit-connection" class="connection-badge"><span class="status-dot"></span><span id="active-connection">Bağlantı seçin</span><span>⌄</span></button></header>
@@ -36,7 +36,7 @@
         <div class="editor-footer"><span><span class="green-dot"></span> PostgreSQL <span class="editor-help">Ctrl+Space: tamamla</span></span><span>Tek SQL komutu · Önizleme en fazla 1.000 satır</span></div>
       </div>
       <section class="result-panel">
-        <div class="result-toolbar"><div class="result-title"><span class="table-symbol">▦</span><strong>Sonuçlar</strong><span id="row-count" class="count">0 satır</span><span id="duration"></span></div><div class="toolbar-actions"><button id="export-csv" class="button export" disabled>↓ CSV indir</button><button id="export-xlsx" class="button export excel" disabled>↓ Excel indir</button></div></div>
+        <div class="result-toolbar"><div class="result-title"><span class="table-symbol">▦</span><strong>Sonuçlar</strong><span id="row-count" class="count">0 satır</span><span id="duration"></span></div><div class="toolbar-actions"><select id="csv-mode" aria-label="CSV biçimi" title="Excel için Türkçe biçimi seçin"><option value="excel-tr">CSV: Excel (Türkçe / UTF-8)</option><option value="excel-tr-legacy">CSV: Eski Excel (Windows-1254)</option><option value="standard">CSV: Standart (UTF-8)</option></select><button id="export-csv" class="button export" disabled>↓ CSV indir</button><button id="export-xlsx" class="button export excel" disabled>↓ Excel indir</button></div></div>
         <div id="export-note" class="export-note">İndirme, sorguyu yeniden çalıştırıp tüm sonuçları aktarır. Yalnızca okuma sorguları indirilebilir.</div>
         <div id="results" class="results"><div class="empty-state"><div class="empty-icon">▦</div><h2>Verilerine bir sorgu kadar yakınsın.</h2><p>Bir bağlantı seç ve ilk sorgunu çalıştır.<br>Kayıtlı sorgularını soldaki listeden açabilirsin.</p><span class="shortcut"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> ile çalıştır</span></div></div>
         <div id="result-status" class="result-status"><span id="status-text">Hazır</span><button id="show-file" class="text-button" hidden>Dosyayı klasörde göster ↗</button></div>

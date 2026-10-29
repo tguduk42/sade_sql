@@ -85,6 +85,29 @@ test('Excel streams 25,000 rows and preserves Turkish, NULL, exact numbers and f
   assert.equal(sheet.getCell('B2').value, 'İstanbul'); assert.equal(sheet.getCell('C2').value, '9007199254740993');
   assert.equal(sheet.getCell('D2').value, null); assert.equal(sheet.getCell('E2').value, '=1+1');
 });
+
+test('Turkish Excel CSV preserves Unicode and localizes only numeric database columns; legacy encoding round trips', async () => {
+  const db = new Database();
+  const text = 'Çağrı İıŞşĞğÜüÖöÇç; "İstanbul", 1.234.56';
+  const query = `SELECT :text::text AS "Açıklama", 1234.5600::numeric AS tutar, -0.18::numeric AS oran,
+    0.000001::double precision AS kucuk, '00123.45'::text AS kod, 9007199254740993::bigint AS kimlik,
+    '2026-10-29'::date AS tarih, NULL::numeric AS eksik`;
+  for (const mode of ['excel-tr', 'excel-tr-legacy']) {
+    const file = path.join(local.directory, mode + '.csv');
+    await db.export(local.connection, query, 'csv', file, undefined, { text }, { csvMode: mode });
+    const bytes = await fs.readFile(file);
+    const contents = mode === 'excel-tr' ? bytes.toString('utf8') : new TextDecoder('windows-1254').decode(bytes);
+    assert.equal(contents, (mode === 'excel-tr' ? '\uFEFF' : '') + 'Açıklama;tutar;oran;kucuk;kod;kimlik;tarih;eksik\r\n"Çağrı İıŞşĞğÜüÖöÇç; ""İstanbul"", 1.234.56";1234,5600;-0,18;0,000001;00123.45;9007199254740993;2026-10-29;\r\n');
+    assert.equal(bytes.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf])), mode === 'excel-tr');
+  }
+  const empty = path.join(local.directory, 'tr-empty.csv');
+  await db.export(local.connection, 'SELECT 1 AS "Başlık" WHERE false', 'csv', empty, undefined, {}, { csvMode: 'excel-tr' });
+  assert.equal(await fs.readFile(empty, 'utf8'), '\uFEFFBaşlık\r\n');
+  const file = path.join(local.directory, 'unsupported.csv'); await fs.writeFile(file, 'original');
+  await assert.rejects(db.export(local.connection, "SELECT 'İstanbul 😀' AS message", 'csv', file, undefined, {}, { csvMode: 'excel-tr-legacy' }), /desteklemiyor/);
+  assert.equal(await fs.readFile(file, 'utf8'), 'original');
+  assert.equal((await fs.readdir(local.directory)).some(name => name.endsWith('.partial')), false);
+});
 test('Empty exports retain headings; export refuses writes and preserves existing destination on failure', async () => {
   const db = new Database(), csv = path.join(local.directory, 'empty.csv'), xlsx = path.join(local.directory, 'empty.xlsx');
   await db.export(local.connection, 'SELECT 1 AS heading WHERE false', 'csv', csv);
