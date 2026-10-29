@@ -46,7 +46,7 @@ app.whenReady().then(async () => {
     });
     if (choice.canceled) return { cancelled: true };
     const result = await database.export(store.resolve(input.connection), input.sql, input.format, choice.filePath,
-      progress => { if (!window.isDestroyed()) window.webContents.send('export:progress', progress); }, input.parameters, { csvMode: input.csvMode || 'excel-tr' });
+      progress => { if (!window.isDestroyed()) window.webContents.send('export:progress', progress); }, input.parameters, { csvMode: input.csvMode || 'excel-tr', numberFormat: input.numberFormat || 'tr-money' });
     exportedFiles.add(result.path);
     return result;
   });

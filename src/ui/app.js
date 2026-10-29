@@ -2,6 +2,7 @@ const $ = selector => document.querySelector(selector);
 const api = window.desktop;
 let workspace = { connections: [], queries: [] }, connectionId = null, queryId = null;
 let savedSQL = '', busy = false, exportedPath = null, hasRun = false, toastTimer;
+let lastResult = null;
 let volatilePassword = '', useSavedPassword = false;
 let tables = [], tablesLoading = false, tableError = '', tableRequest = 0, savingQuery = false;
 const sql = $('#sql');
@@ -44,6 +45,7 @@ function updateButtons() {
   $('#run-query').disabled = !ready;
   $('#export-csv').disabled = !ready; $('#export-xlsx').disabled = !ready;
   $('#csv-mode').disabled = busy;
+  $('#number-format').disabled = busy;
   $('#cancel').hidden = !busy;
   for (const selector of ['#save-query', '#rename-query', '#new-query', '#open-sql', '#add-connection', '#edit-connection']) $(selector).disabled = busy || savingQuery;
   $('#refresh-tables').disabled = busy || tablesLoading || !connectionId;
@@ -181,6 +183,7 @@ function connectionForm() {
     useSavedPassword: Boolean(workspace.connections.find(item => item.id === form.elements.id.value)?.hasPassword) };
 }
 function showResults(result) {
+  lastResult = result;
   hasRun = true; $('#row-count').textContent = number(result.rows.length) + (result.truncated ? '+' : '') + ' satır';
   $('#duration').textContent = (result.elapsed / 1000).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' sn';
   const table = document.createElement('table'), head = document.createElement('thead'), header = document.createElement('tr');
@@ -188,7 +191,7 @@ function showResults(result) {
   const body = document.createElement('tbody');
   result.rows.forEach((values, index) => {
     const row = document.createElement('tr'), count = document.createElement('td'); count.textContent = index + 1; count.className = 'row-number'; row.append(count);
-    for (const value of values) { const cell = document.createElement('td'); cell.textContent = value === null ? 'NULL' : value; if (value === null) cell.className = 'null'; cell.title = value ?? 'NULL'; row.append(cell); }
+    values.forEach((value, column) => { const cell = document.createElement('td'); cell.textContent = value === null ? 'NULL' : NumberDisplay.display(value, result.fieldTypes?.[column], result.fields[column], $('#number-format').value); if (value === null) cell.className = 'null'; cell.title = value ?? 'NULL'; row.append(cell); });
     body.append(row);
   }); table.append(head, body); $('#results').replaceChildren(table);
   $('#status-text').textContent = result.truncated ? 'İlk 1.000 satır gösteriliyor. İndirme düğmeleri tüm sonuçları aktarır.' : result.rows.length ? 'Sorgu tamamlandı.' : 'Komut tamamlandı. Sonuç satırı yok.';
@@ -209,7 +212,7 @@ async function exportResults(format) {
   // Exports are intentionally read-only: rerunning a modifying statement must not duplicate writes.
   try {
     const connection = currentConnection(), parameters = editor.values(); setBusy(true, 'Dosya konumu seçiliyor…');
-    const result = await call('export', { connection, sql: sql.value, parameters, format, csvMode: $('#csv-mode').value, name: workspace.queries.find(query => query.id === queryId)?.name || 'Sorgu sonucu' });
+    const result = await call('export', { connection, sql: sql.value, parameters, format, csvMode: $('#csv-mode').value, numberFormat: $('#number-format').value, name: workspace.queries.find(query => query.id === queryId)?.name || 'Sorgu sonucu' });
     if (result.cancelled) { $('#status-text').textContent = 'İndirme iptal edildi.'; return; }
     exportedPath = result.path; $('#show-file').hidden = false;
     $('#status-text').textContent = number(result.rows) + ' satır dosyaya kaydedildi.';
@@ -285,6 +288,7 @@ $('#open-sql').onclick = async () => {
   try { const result = await call('openSQL'); if (result) { queryId = null; sql.value = result.sql; savedSQL = ''; clearResults(); updateEditor(); renderSidebar(); toast('Dosya açıldı. Kaydet ile sorgu listene ekleyebilirsin.'); } } catch (error) { toast(error.message, true); }
 };
 $('#show-file').onclick = () => call('showFile', exportedPath).catch(error => toast(error.message, true));
+$('#number-format').onchange = () => { if (hasRun && lastResult) showResults(lastResult); };
 $('#search').oninput = renderSidebar;
 sql.oninput = () => { updateEditor(); editor.suggest(); };
 sql.onscroll = () => { $('#line-numbers').scrollTop = sql.scrollTop; };

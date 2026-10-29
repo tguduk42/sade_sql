@@ -4,11 +4,11 @@ Windows için ücretsiz, açık kaynak PostgreSQL istemcisi. Beekeeper Studio'da
 
 ## Aç ve kullan
 
-[**Windows EXE indir — v1.0.6**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.6/Sade-SQL-1.0.6-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
+[**Windows EXE indir — v1.0.7**](https://github.com/tguduk42/sade_sql/releases/download/v1.0.7/Sade-SQL-1.0.7-Windows.exe) · [Tüm sürümler](https://github.com/tguduk42/sade_sql/releases)
 
 İndirilen EXE'ye çift tıklayın; kurulum gerekmez. Kaynak kod ZIP dosyası EXE içermez; hazır uygulamayı yukarıdaki bağlantıdan veya Releases bölümünden indirin.
 
-`dist/release-1.0.6/Sade-SQL-1.0.6-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.6/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
+`dist/release-1.0.7/Sade-SQL-1.0.7-Windows.exe` dosyasını açın veya kök klasördeki `Sade SQL Baslat.cmd` dosyasına çift tıklayın. Kurulum, Node.js veya yerel PostgreSQL sunucusu gerekmez; erişebildiğiniz bir PostgreSQL sunucusu yeterlidir. Alternatif olarak `dist/release-1.0.7/win-unpacked/Sade SQL.exe` açılabilir; bu seçenekte yanındaki dosyalar da korunmalıdır. Standart `npm run dist` çıktısı `dist/` köküne yazılır; mevcut EXE açıksa farklı çıktı diziniyle paketleyin.
 
 ### Bu bilgisayardaki WSL/Docker PostgreSQL
 
@@ -49,6 +49,14 @@ Yazarken öneriler açılır; **Ctrl+Space** ile elle de açabilirsiniz. **↑/�
 Metadata bağlantı sırasında ve ↻ ile yüklenir; öneri üretmek için harici servis/AI çağrısı yapılmaz. Tam bir PostgreSQL dil sunucusu değildir: karmaşık CTE/alt sorgu sonuç sütunlarını, dinamik SQL'i veya tüm alias kapsamlarını anlamsal olarak çözümlemez. Sütun/veri türü açıklamaları PostgreSQL metadata'sından gelir. Girilen tablo/sütun isimleri SQL tanımlayıcısı olarak güvenli biçimde tırnaklanır.
 
 ## Dışa aktarma davranışı
+
+### Tutar görünümü
+
+Sonuçların üstündeki **Sayı görünümü → Tutar (36.000,00)** varsayılandır. `36000` → `36.000,00`, `850000.0000000` → `850.000,00` görünür. `numeric`/ondalıklı sütunlara ve adı tutar/amount/fiyat/bakiye/toplam gibi olan sayısal sütunlara uygulanır; ID, kimlik, kod, UUID ve IBAN isimli sütunlar hariçtir. Tam sayı ID ve metin kodları değiştirilmez. İki basamağa yuvarlama yapılır; yarımlar sıfırdan uzağa yuvarlanır. Veritabanı ve sorgu metni değiştirilmez. Ekranda hücrenin üzerine gelince ham değer görünür; **Ham değer** seçeneği sorguyu yeniden çalıştırmadan eski görünümü açar.
+
+Türkçe CSV seçenekleri aynı görünümü dosyaya yazar. **Standart CSV**, makineye aktarım için ham noktalı değerleri korur. Excel'de 15 anlamlı rakama sığan tutarlar sayı olarak yazılır ve `#,##0.00` biçimi uygulanır; Türkçe Excel bölge ayarında `36.000,00` görünür, toplam alınabilir. Excel'in kendi bölge ayarı farklıysa ayırıcıların görünümü o ayara uyar. Excel'e sığmayacak hassas değerler, yuvarlanıp bozulmaması için eski davranıştaki gibi tam metin olarak korunur. Bu istisnada XLSX hücresi tutar görünümüne çevrilmez; ham değeri saklar.
+
+### Aktarım kuralları
 
 - Ekranda ilk **1.000 satır** gösterilir. Dosya aktarımı bu sınırı kullanmaz; veritabanından bütün satırları akışla okur. Ticari satır limiti veya abonelik yoktur.
 - v1.0.1'de CSV aktarımı 10.000, Excel aktarımı 2.000 satırlık paketler kullanır. Önizlemenin okuma paketi 200 olarak kalır. Windows–WSL–Docker üzerinde 1 milyon satırla karşılaştırma sonuçları `DOGRULAMA.md` içinde.

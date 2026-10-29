@@ -29,6 +29,9 @@ async function smoke() {
     const page = await app.firstWindow();
     page.on('pageerror', error => errors.push(error.message));
     await page.locator('#query-title').waitFor();
+    // Existing regression assertions deliberately inspect the unformatted data.
+    // Default money rendering has a dedicated headless renderer test.
+    await page.locator('#number-format').selectOption('raw');
     return { app, page };
   };
   try {

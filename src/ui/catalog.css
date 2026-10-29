@@ -4,3 +4,5 @@
 #check-update{margin-top:8px;flex-shrink:0;font-size:11px}#update-dialog p{line-height:1.7;color:#aab5c2}#update-progress{width:100%;accent-color:var(--accent)}
 
 #csv-mode{max-width:210px;background:#171d24;color:#c5cfdb;border:1px solid #424d5b;border-radius:5px;padding:7px;font-size:11px}@media(max-width:1130px){#csv-mode{max-width:145px}}
+
+.number-format-bar{display:flex;align-items:center;gap:12px;padding:7px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);flex-shrink:0}.number-format-bar select{background:#171d24;color:var(--text);border:1px solid #424d5b;border-radius:4px;padding:4px 7px;margin-left:7px}.number-format-bar span{font-size:10px}@media(max-width:1130px){.number-format-bar span{display:none}}

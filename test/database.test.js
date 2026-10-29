@@ -121,6 +121,28 @@ test('Empty exports retain headings; export refuses writes and preserves existin
   assert.equal(await fs.readFile(csv, 'utf8'), 'original');
   assert.equal((await fs.readdir(local.directory)).some(name => name.endsWith('.partial')), false);
 });
+
+test('Money view preserves raw preview values, groups Turkish CSV and writes numeric Excel cells with two-decimal style', async () => {
+  const db = new Database();
+  const sql = `SELECT 36000::numeric AS tutar, 850000.0000000::numeric AS bakiye, 7::int AS id,
+    36000::int AS "İşlem Tutarı", '00123.45'::text AS kod, 9007199254740993.125::numeric AS hassas`;
+  const preview = await db.preview(local.connection, sql);
+  assert.deepEqual(preview.fieldTypes, [1700,1700,23,23,25,1700]);
+  assert.equal(preview.rows[0][1], '850000.0000000');
+  const file = path.join(local.directory, 'money.csv');
+  await db.export(local.connection, sql, 'csv', file, undefined, {}, { csvMode:'excel-tr', numberFormat:'tr-money' });
+  assert.ok((await fs.readFile(file, 'utf8')).endsWith('36.000,00;850.000,00;7;36.000,00;00123.45;9.007.199.254.740.993,13\r\n'));
+  await db.export(local.connection, sql, 'csv', file, undefined, {}, { csvMode:'standard', numberFormat:'tr-money' });
+  assert.ok((await fs.readFile(file, 'utf8')).includes('36000,850000.0000000,7,36000,00123.45,9007199254740993.125'));
+  const xlsx = path.join(local.directory, 'money.xlsx');
+  await db.export(local.connection, sql, 'xlsx', xlsx, undefined, {}, { numberFormat:'tr-money' });
+  const book = new ExcelJS.Workbook(); await book.xlsx.readFile(xlsx); const sheet = book.worksheets[0];
+  assert.equal(sheet.getCell('A2').value, 36000); assert.equal(sheet.getCell('B2').value, 850000);
+  assert.equal(sheet.getCell('A2').numFmt, '#,##0.00'); assert.equal(sheet.getCell('B2').numFmt, '#,##0.00');
+  assert.equal(sheet.getCell('C2').value, 7); assert.notEqual(sheet.getCell('C2').numFmt, '#,##0.00');
+  assert.equal(sheet.getCell('D2').value, 36000); assert.equal(sheet.getCell('D2').numFmt, '#,##0.00');
+  assert.equal(sheet.getCell('E2').value, '00123.45'); assert.equal(sheet.getCell('F2').value, '9007199254740993.125');
+});
 test('A long-running query can be cancelled and connection is reusable', { timeout: 10000 }, async () => {
   const db = new Database();
   const run = db.preview(local.connection, 'SELECT pg_sleep(30)');

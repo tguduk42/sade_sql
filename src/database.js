@@ -8,6 +8,7 @@ const { randomUUID } = require('node:crypto');
 const { once } = require('node:events');
 const { bind } = require('./ui/sql-tools');
 const { createCSV } = require('./csv');
+const { isMoneyColumn, excelNumber } = require('./ui/number-format');
 
 const PREVIEW_LIMIT = 1000;
 // CSV benefits strongly from fewer database round trips. XLSX is dominated by
@@ -124,14 +125,17 @@ class Database {
       }
       if (operation.cancelled) throw new Error('İşlem iptal edildi.');
       const fields = stream.cursor._result.fields.map(field => field.name);
-      return { fields, rows, truncated, elapsed: Date.now() - started, limit: PREVIEW_LIMIT };
+      const fieldTypes = stream.cursor._result.fields.map(field => field.dataTypeID);
+      return { fields, fieldTypes, rows, truncated, elapsed: Date.now() - started, limit: PREVIEW_LIMIT };
     });
   }
   async export(connection, sql, format, destination, progress = () => {}, parameters = {}, options = {}) {
     checkSQL(sql);
     const query = bind(sql, parameters);
     if (!['csv', 'xlsx'].includes(format)) throw new Error('Geçersiz dosya türü.');
-    const csv = format === 'csv' ? createCSV(options.csvMode || 'standard', valueText) : null;
+    const numberFormat = options.numberFormat || 'raw';
+    if (!['raw', 'tr-money'].includes(numberFormat)) throw new Error('Geçersiz sayı görünümü.');
+    const csv = format === 'csv' ? createCSV(options.csvMode || 'standard', valueText, numberFormat) : null;
     const temporary = path.join(path.dirname(destination), '.' + randomUUID() + '.partial');
     let output;
     try {
@@ -153,7 +157,8 @@ class Database {
           if (format === 'csv') await write(csv.header(metadata));
           else {
             sheet = workbook.addWorksheet('Sonuçlar ' + (++sheetNumber), { views: [{ state: 'frozen', ySplit: 1 }] });
-            sheet.columns = fields.map(name => ({ width: Math.min(48, Math.max(18, name.length + 3)) }));
+            sheet.columns = fields.map((name, index) => ({ width: Math.min(48, Math.max(18, name.length + 3)),
+              ...(numberFormat === 'tr-money' && isMoneyColumn(metadata[index].dataTypeID, name) ? { style: { numFmt: '#,##0.00' } } : {}) }));
             const row = sheet.addRow(fields);
             row.font = { bold: true, color: { argb: 'FFFFFFFF' } };
             row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF245A50' } };
@@ -168,7 +173,14 @@ class Database {
           else {
             if (sheetRows >= 1_048_575) { sheet.commit(); await header(); }
             // Preserve bigint/numeric strings without Excel's 15-digit rounding.
-            const cells = row.map(value => value == null ? null : typeof value === 'number' || typeof value === 'boolean' ? value : valueText(value));
+            const cells = row.map((value, index) => {
+              if (value == null) return null;
+              if (numberFormat === 'tr-money' && isMoneyColumn(metadata[index].dataTypeID, fields[index])) {
+                const numeric = excelNumber(value);
+                if (numeric !== null) return numeric;
+              }
+              return typeof value === 'number' || typeof value === 'boolean' ? value : valueText(value);
+            });
             if (cells.some(value => typeof value === 'string' && value.length > 32767)) throw new Error('Bir hücre Excel’in 32.767 karakter sınırını aşıyor. Veriyi eksiksiz almak için CSV kullanın.');
             sheet.addRow(cells).commit();
             sheetRows++;
